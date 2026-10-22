@@ -20,8 +20,16 @@ _s3 = boto3.client(
 )
 
 
+def _ensure_bucket() -> None:
+    try:
+        _s3.head_bucket(Bucket=_BUCKET)
+    except Exception:
+        _s3.create_bucket(Bucket=_BUCKET)
+
+
 def upload_file(data: bytes, path: str, content_type: str = "image/png") -> str:
     import io
+    _ensure_bucket()
     _s3.upload_fileobj(
         io.BytesIO(data),
         _BUCKET,
