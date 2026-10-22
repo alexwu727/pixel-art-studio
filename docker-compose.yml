@@ -16,20 +16,17 @@ services:
       retries: 10
 
   minio:
-    image: localstack/localstack:latest
+    image: adobe/s3mock:latest
     restart: unless-stopped
     ports:
-      - "9000:4566"
+      - "9000:9090"
     environment:
-      SERVICES: s3
-      DEFAULT_REGION: us-east-1
-      AWS_DEFAULT_REGION: us-east-1
-      PERSISTENCE: 1
-      DATA_DIR: /var/lib/localstack/data
+      initialBuckets: pixel-art
+      retainFilesOnExit: "true"
     volumes:
-      - minio-data:/var/lib/localstack
+      - minio-data:/s3mockroot
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9090/ || exit 0"]
       interval: 5s
       timeout: 5s
       retries: 15
@@ -41,7 +38,7 @@ services:
       - "8001:8001"
     environment:
       MCP_PORT: 8001
-      MINIO_ENDPOINT: minio:4566
+      MINIO_ENDPOINT: minio:9090
       MINIO_ACCESS_KEY: test
       MINIO_SECRET_KEY: testtest
       MINIO_BUCKET: pixel-art
@@ -63,7 +60,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      MINIO_ENDPOINT: minio:4566
+      MINIO_ENDPOINT: minio:9090
       MINIO_ACCESS_KEY: test
       MINIO_SECRET_KEY: testtest
       MINIO_BUCKET: pixel-art

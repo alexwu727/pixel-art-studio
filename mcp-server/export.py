@@ -11,17 +11,19 @@ from PIL import Image
 
 from canvas import CanvasState
 
-# ── MinIO / S3 ──────────────────────────────────────────────────────────────
+# ── MinIO / S3 ────────────────────────────────────────────
 
 def _s3_client():
-    endpoint = os.environ.get("MINIO_ENDPOINT", "minio:4566")
+    endpoint = os.environ.get("MINIO_ENDPOINT", "minio:9090")
     use_ssl = os.environ.get("MINIO_USE_SSL", "false").lower() == "true"
+    from botocore.client import Config
     return boto3.client(
         "s3",
         endpoint_url=f"{'https' if use_ssl else 'http'}://{endpoint}",
         aws_access_key_id=os.environ.get("MINIO_ACCESS_KEY", "test"),
         aws_secret_access_key=os.environ.get("MINIO_SECRET_KEY", "testtest"),
         region_name="us-east-1",
+        config=Config(s3={"addressing_style": "path"}),
     )
 
 
@@ -37,12 +39,12 @@ def _upload(data: bytes, path: str, content_type: str) -> str:
     s3 = _s3_client()
     _ensure_bucket(s3, bucket)
     s3.put_object(Bucket=bucket, Key=path, Body=data, ContentType=content_type)
-    endpoint = os.environ.get("MINIO_ENDPOINT", "minio:4566")
+    endpoint = os.environ.get("MINIO_ENDPOINT", "minio:9090")
     use_ssl = os.environ.get("MINIO_USE_SSL", "false").lower() == "true"
     return f"{'https' if use_ssl else 'http'}://{endpoint}/{bucket}/{path}"
 
 
-# ── PostgreSQL ───────────────────────────────────────────────────────────────
+# ── PostgreSQL ────────────────────────────────────────────
 
 def _db_conn():
     return psycopg2.connect(
@@ -93,7 +95,7 @@ def _upsert_sprite(
             )
 
 
-# ── Public export functions ──────────────────────────────────────────────────
+# ── Public export functions ────────────────────────────────────────────
 
 def export_png(canvas: CanvasState, path: str, scale: int = 8, tags: list[str] | None = None) -> str:
     img: Image.Image = canvas.to_image(scale)

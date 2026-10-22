@@ -8,7 +8,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 ENV MCP_PORT=8001
-ENV MINIO_ENDPOINT=minio:4566
+ENV MINIO_ENDPOINT=minio:9090
 ENV MINIO_ACCESS_KEY=test
 ENV MINIO_SECRET_KEY=testtest
 ENV MINIO_BUCKET=pixel-art

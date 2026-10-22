@@ -2,7 +2,7 @@ import os
 import boto3
 from botocore.client import Config
 
-_ENDPOINT = os.getenv("MINIO_ENDPOINT", "minio:4566")
+_ENDPOINT = os.getenv("MINIO_ENDPOINT", "minio:9090")
 _ACCESS   = os.getenv("MINIO_ACCESS_KEY", "test")
 _SECRET   = os.getenv("MINIO_SECRET_KEY", "testtest")
 _BUCKET   = os.getenv("MINIO_BUCKET", "pixel-art")
@@ -15,7 +15,7 @@ _s3 = boto3.client(
     endpoint_url=f"{_scheme}://{_ENDPOINT}",
     aws_access_key_id=_ACCESS,
     aws_secret_access_key=_SECRET,
-    config=Config(signature_version="s3v4"),
+    config=Config(signature_version="s3v4", s3={"addressing_style": "path"}),
     region_name="us-east-1",
 )
 
