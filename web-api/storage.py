@@ -2,9 +2,9 @@ import os
 import boto3
 from botocore.client import Config
 
-_ENDPOINT = os.getenv("MINIO_ENDPOINT", "localhost:9000")
-_ACCESS   = os.getenv("MINIO_ACCESS_KEY", "pixelart")
-_SECRET   = os.getenv("MINIO_SECRET_KEY", "pixelart123")
+_ENDPOINT = os.getenv("MINIO_ENDPOINT", "minio:4566")
+_ACCESS   = os.getenv("MINIO_ACCESS_KEY", "test")
+_SECRET   = os.getenv("MINIO_SECRET_KEY", "testtest")
 _BUCKET   = os.getenv("MINIO_BUCKET", "pixel-art")
 _USE_SSL  = os.getenv("MINIO_USE_SSL", "false").lower() == "true"
 

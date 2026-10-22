@@ -8,9 +8,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 ENV MCP_PORT=8001
-ENV MINIO_ENDPOINT=minio:9000
-ENV MINIO_ACCESS_KEY=pixelart
-ENV MINIO_SECRET_KEY=pixelart123
+ENV MINIO_ENDPOINT=minio:4566
+ENV MINIO_ACCESS_KEY=test
+ENV MINIO_SECRET_KEY=testtest
 ENV MINIO_BUCKET=pixel-art
 ENV MINIO_USE_SSL=false
 ENV POSTGRES_HOST=postgres

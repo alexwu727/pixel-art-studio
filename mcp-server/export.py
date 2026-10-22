@@ -11,15 +11,17 @@ from PIL import Image
 
 from canvas import CanvasState
 
+# ── MinIO / S3 ──────────────────────────────────────────────────────────────
 
 def _s3_client():
-    endpoint = os.environ.get("MINIO_ENDPOINT", "minio:9000")
+    endpoint = os.environ.get("MINIO_ENDPOINT", "minio:4566")
     use_ssl = os.environ.get("MINIO_USE_SSL", "false").lower() == "true"
     return boto3.client(
         "s3",
         endpoint_url=f"{'https' if use_ssl else 'http'}://{endpoint}",
-        aws_access_key_id=os.environ.get("MINIO_ACCESS_KEY", "pixelart"),
-        aws_secret_access_key=os.environ.get("MINIO_SECRET_KEY", "pixelart123"),
+        aws_access_key_id=os.environ.get("MINIO_ACCESS_KEY", "test"),
+        aws_secret_access_key=os.environ.get("MINIO_SECRET_KEY", "testtest"),
+        region_name="us-east-1",
     )
 
 
@@ -35,10 +37,12 @@ def _upload(data: bytes, path: str, content_type: str) -> str:
     s3 = _s3_client()
     _ensure_bucket(s3, bucket)
     s3.put_object(Bucket=bucket, Key=path, Body=data, ContentType=content_type)
-    endpoint = os.environ.get("MINIO_ENDPOINT", "minio:9000")
+    endpoint = os.environ.get("MINIO_ENDPOINT", "minio:4566")
     use_ssl = os.environ.get("MINIO_USE_SSL", "false").lower() == "true"
     return f"{'https' if use_ssl else 'http'}://{endpoint}/{bucket}/{path}"
 
+
+# ── PostgreSQL ───────────────────────────────────────────────────────────────
 
 def _db_conn():
     return psycopg2.connect(
@@ -60,6 +64,7 @@ def _upsert_sprite(
     name = path.rsplit("/", 1)[-1].rsplit(".", 1)[0]
     folder = path.rsplit("/", 1)[0] if "/" in path else ""
     frame_count = len(canvas.frames) if file_type == "gif" else 1
+
     with _db_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -88,6 +93,8 @@ def _upsert_sprite(
             )
 
 
+# ── Public export functions ──────────────────────────────────────────────────
+
 def export_png(canvas: CanvasState, path: str, scale: int = 8, tags: list[str] | None = None) -> str:
     img: Image.Image = canvas.to_image(scale)
     buf = io.BytesIO()
@@ -106,10 +113,15 @@ def export_gif(
 ) -> str:
     if not canvas.frames:
         raise ValueError("No frames to export. Call add_frame at least once.")
-    import numpy as np
+
     images = canvas.frames_to_images(scale)
     buf = io.BytesIO()
-    imageio.mimsave(buf, [np.array(img) for img in images], format="GIF", duration=frame_delay_ms / 1000)
+    imageio.mimsave(buf, [_pil_to_numpy(img) for img in images], format="GIF", duration=frame_delay_ms / 1000)
     url = _upload(buf.getvalue(), path, "image/gif")
     _upsert_sprite(path, canvas, "gif", tags or [])
     return url
+
+
+def _pil_to_numpy(img: Image.Image):
+    import numpy as np
+    return np.array(img)
